@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Truth Table Generator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .navbar {
+            background-color: #2c3e50;
+            padding: 1rem;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .navbar h1 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 0;
+            transition: color 0.3s;
+        }
+        
+        .nav-links a:hover {
+            color: #3498db;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .generator-section {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        
+        input[type="text"] {
+            width: 100%;
+            padding: 0.75rem;
+            font-size: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        .result {
+            margin-top: 2rem;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        
+        th, td {
+            padding: 0.75rem;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background-color: #f2f2f2;
+            font-weight: 600;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .theory-section {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .theory-section h2 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        
+        .theory-section h3 {
+            color: #3498db;
+            margin-top: 1.5rem;
+        }
+        
+        .examples {
+            background-color: #f9f9f9;
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+        }
+        
+        .examples p {
+            margin: 0.5rem 0;
+        }
+        
+        .operator-table {
+            width: 100%;
+            margin: 1rem 0;
+        }
+        
+        .operator-table th {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .error {
+            color: #e74c3c;
+            margin-top: 0.5rem;
+        }
+
+        .active {
+            color: #3498db !important;
+            border-bottom: 2px solid #3498db;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .help-text {
+            color: #777;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        #variableList {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .detected-var {
+            background-color: #edf2f7;
+            padding: 0.25rem 0.5rem;
+            border-radius: 3px;
+            font-size: 0.9rem;
+        }
+
+        .highlight {
+            font-weight: 600;
+            background-color: #e8f4fd;
+            padding: 0 0.25rem;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h1>Truth Table Generator</h1>
+        <div class="nav-links">
+            <a href="#" id="generator-link" class="active">Generator</a>
+            <a href="#" id="theory-link">Logic Theory</a>
+            <a href="#" id="instructions-link">Instructions</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div id="generator" class="section generator-section active">
+            <h2>Interactive Truth Table Generator</h2>
+            <div class="input-group">
+                <label for="expression">Enter Logical Expression:</label>
+                <input type="text" id="expression" placeholder="e.g., p & q | !r" value="p & q">
+                <p class="help-text">Use operators: & (AND), | (OR), ! (NOT), -> (IMPLIES), <-> (EQUIVALENCE), ^ (XOR)</p>
+                <div id="variableList"></div>
+            </div>
+            <button id="generate">Generate Truth Table</button>
+            <div id="error" class="error"></div>
+            <div id="result" class="result"></div>
+        </div>
+        
+        <div id="theory" class="section theory-section">
+            <h2>Propositional Logic Theory</h2>
+            
+            <h3>Basic Concepts</h3>
+            <p>Propositional logic deals with propositions (statements that are either true or false) and logical connectives. The fundamental building blocks of propositional logic are:</p>
+            <ul>
+                <li><strong>Propositional Variables</strong>: Typically represented by letters like p, q, r, etc.</li>
+                <li><strong>Truth Values</strong>: Every proposition is either True (T) or False (F)</li>
+                <li><strong>Logical Connectives</strong>: Operators that connect propositions to form compound propositions</li>
+            </ul>
+            
+            <h3>Logical Operators</h3>
+            <table class="operator-table">
+                <thead>
+                    <tr>
+                        <th>Operator</th>
+                        <th>Symbol</th>
+                        <th>Name</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>NOT</td>
+                        <td>¬, !</td>
+                        <td>Negation</td>
+                        <td>Reverses the truth value</td>
+                    </tr>
+                    <tr>
+                        <td>AND</td>
+                        <td>∧, &</td>
+                        <td>Conjunction</td>
+                        <td>True only when both operands are true</td>
+                    </tr>
+                    <tr>
+                        <td>OR</td>
+                        <td>∨, |</td>
+                        <td>Disjunction</td>
+                        <td>True when at least one operand is true</td>
+                    </tr>
+                    <tr>
+                        <td>XOR</td>
+                        <td>⊕, ^</td>
+                        <td>Exclusive OR</td>
+                        <td>True when exactly one operand is true</td>
+                    </tr>
+                    <tr>
+                        <td>IMPLIES</td>
+                        <td>→, -></td>
+                        <td>Implication</td>
+                        <td>False only when premise is true and conclusion is false</td>
+                    </tr>
+                    <tr>
+                        <td>EQUIV</td>
+                        <td>↔, <-></td>
+                        <td>Equivalence</td>
+                        <td>True when both operands have the same truth value</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h3>Truth Tables</h3>
+            <p>A truth table shows all possible combinations of truth values for the variables in a logical expression, along with the resulting truth value of the entire expression.</p>
+            
+            <div class="examples">
+                <h4>Examples of Basic Truth Tables</h4>
+                
+                <h5>Negation (NOT)</h5>
+                <table>
+                    <tr><th>p</th><th>!p</th></tr>
+                    <tr><td>T</td><td>F</td></tr>
+                    <tr><td>F</td><td>T</td></tr>
+                </table>
+                
+                <h5>Conjunction (AND)</h5>
+                <table>
+                    <tr><th>p</th><th>q</th><th>p & q</th></tr>
+                    <tr><td>T</td><td>T</td><td>T</td></tr>
+                    <tr><td>T</td><td>F</td><td>F</td></tr>
+                    <tr><td>F</td><td>T</td><td>F</td></tr>
+                    <tr><td>F</td><td>F</td><td>F</td></tr>
+                </table>
+                
+                <h5>Disjunction (OR)</h5>
+                <table>
+                    <tr><th>p</th><th>q</th><th>p | q</th></tr>
+                    <tr><td>T</td><td>T</td><td>T</td></tr>
+                    <tr><td>T</td><td>F</td><td>T</td></tr>
+                    <tr><td>F</td><td>T</td><td>T</td></tr>
+                    <tr><td>F</td><td>F</td><td>F</td></tr>
+                </table>
+                
+                <h5>Implication</h5>
+                <table>
+                    <tr><th>p</th><th>q</th><th>p -> q</th></tr>
+                    <tr><td>T</td><td>T</td><td>T</td></tr>
+                    <tr><td>T</td><td>F</td><td>F</td></tr>
+                    <tr><td>F</td><td>T</td><td>T</td></tr>
+                    <tr><td>F</td><td>F</td><td>T</td></tr>
+                </table>
+            </div>
+            
+            <h3>Logical Equivalences</h3>
+            <p>Some important logical equivalences:</p>
+            <ul>
+                <li><strong>Double Negation</strong>: !!p ≡ p</li>
+                <li><strong>Commutativity</strong>: p & q ≡ q & p, p | q ≡ q | p</li>
+                <li><strong>Associativity</strong>: (p & q) & r ≡ p & (q & r), (p | q) | r ≡ p | (q | r)</li>
+                <li><strong>Distributivity</strong>: p & (q | r) ≡ (p & q) | (p & r), p | (q & r) ≡ (p | q) & (p | r)</li>
+                <li><strong>De Morgan's Laws</strong>: !(p & q) ≡ !p | !q, !(p | q) ≡ !p & !q</li>
+                <li><strong>Implication</strong>: p -> q ≡ !p | q</li>
+                <li><strong>Contrapositive</strong>: p -> q ≡ !q -> !p</li>
+            </ul>
+        </div>
+        
+        <div id="instructions" class="section theory-section">
+            <h2>How to Use the Truth Table Generator</h2>
+            
+            <h3>Entering Expressions</h3>
+            <p>You can enter logical expressions using the following operators:</p>
+            <ul>
+                <li><span class="highlight">!</span> or <span class="highlight">~</span> for NOT</li>
+                <li><span class="highlight">&</span> for AND</li>
+                <li><span class="highlight">|</span> for OR</li>
+                <li><span class="highlight">^</span> for XOR (exclusive OR)</li>
+                <li><span class="highlight">-></span> for IMPLIES</li>
+                <li><span class="highlight"><-></span> for EQUIVALENCE</li>
+            </ul>
+            <p>Variable names can be any single letter (a-z). Use parentheses to control the order of operations.</p>
+            
+            <h3>Examples</h3>
+            <div class="examples">
+                <p><strong>p AND q:</strong> <code>p & q</code></p>
+                <p><strong>NOT p OR q:</strong> <code>!p | q</code></p>
+                <p><strong>p IMPLIES q:</strong> <code>p -> q</code></p>
+                <p><strong>Complex expression:</strong> <code>(p & q) | (!r -> s)</code></p>
+                <p><strong>With parentheses:</strong> <code>!(p & q) <-> (!p | !q)</code></p>
+            </div>
+            
+            <h3>Reading the Truth Table</h3>
+            <p>The generated truth table will display:</p>
+            <ul>
+                <li>All possible combinations of truth values for your variables</li>
+                <li>Intermediate results for subexpressions (for complex expressions)</li>
+                <li>The final evaluation for the entire expression</li>
+            </ul>
+            <p>This helps you understand how the expression evaluates step by step.</p>
+            
+            <h3>Tips</h3>
+            <ul>
+                <li>Use parentheses to make your expression clearer and control precedence</li>
+                <li>The order of operators from highest to lowest precedence is: ! (NOT), & (AND), | (OR), -> (IMPLIES), <-> (EQUIVALENCE)</li>
+                <li>Variable names are case-sensitive (p and P are different variables)</li>
+                <li>For large expressions, the table can become quite big, so focus on specific combinations if needed</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Navigation
+            const sections = {
+                'generator': document.getElementById('generator'),
+                'theory': document.getElementById('theory'),
+                'instructions': document.getElementById('instructions')
+            };
+            
+            const links = {
+                'generator-link': document.getElementById('generator-link'),
+                'theory-link': document.getElementById('theory-link'),
+                'instructions-link': document.getElementById('instructions-link')
+            };
+            
+            function switchSection(sectionId) {
+                // Hide all sections
+                Object.values(sections).forEach(section => {
+                    section.classList.remove('active');
+                });
+                
+                // Show the selected section
+                sections[sectionId].classList.add('active');
+                
+                // Update active link
+                Object.values(links).forEach(link => {
+                    link.classList.remove('active');
+                });
+                
+                document.getElementById(sectionId + '-link').classList.add('active');
+            }
+            
+            links['generator-link'].addEventListener('click', function(e) {
+                e.preventDefault();
+                switchSection('generator');
+            });
+            
+            links['theory-link'].addEventListener('click', function(e) {
+                e.preventDefault();
+                switchSection('theory');
+            });
+            
+            links['instructions-link'].addEventListener('click', function(e) {
+                e.preventDefault();
+                switchSection('instructions');
+            });
+            
+            // Truth Table Generator Logic
+            const generateBtn = document.getElementById('generate');
+            const expressionInput = document.getElementById('expression');
+            const resultDiv = document.getElementById('result');
+            const errorDiv = document.getElementById('error');
+            const variableListDiv = document.getElementById('variableList');
+            
+            // Update variable list as the user types
+            expressionInput.addEventListener('input', function() {
+                updateVariableList();
+            });
+            
+            function updateVariableList() {
+                const expression = expressionInput.value.trim();
+                if (!expression) {
+                    variableListDiv.innerHTML = '';
+                    return;
+                }
+                
+                const variables = extractVariables(expression);
+                
+                if (variables.length === 0) {
+                    variableListDiv.innerHTML = '<span class="help-text">No variables detected</span>';
+                    return;
+                }
+                
+                variableListDiv.innerHTML = '<span class="help-text">Detected variables: </span>';
+                variables.forEach(variable => {
+                    const varSpan = document.createElement('span');
+                    varSpan.className = 'detected-var';
+                    varSpan.textContent = variable;
+                    variableListDiv.appendChild(varSpan);
+                });
+            }
+            
+            function extractVariables(expression) {
+                const variableSet = new Set();
+                const operatorChars = ['&', '|', '!', '-', '<', '>', '^', '(', ')', ' ', '\t', '\n'];
+                
+                for (let i = 0; i < expression.length; i++) {
+                    const char = expression[i];
+                    if (!operatorChars.includes(char) && char.match(/[a-z]/i)) {
+                        variableSet.add(char);
+                    }
+                }
+                
+                return Array.from(variableSet).sort();
+            }
+            
+            generateBtn.addEventListener('click', function() {
+                const expression = expressionInput.value.trim();
+                if (!expression) {
+                    errorDiv.textContent = 'Please enter a logical expression';
+                    resultDiv.innerHTML = '';
+                    return;
+                }
+                
+                try {
+                    generateTruthTable(expression);
+                    errorDiv.textContent = '';
+                } catch (error) {
+                    errorDiv.textContent = 'Error: ' + error.message;
+                    resultDiv.innerHTML = '';
+                }
+            });
+            
+            function generateTruthTable(expression) {
+                const variables = extractVariables(expression);
+                
+                if (variables.length === 0) {
+                    throw new Error('No variables found in the expression');
+                }
+                
+                if (variables.length > 5) {
+                    throw new Error('Too many variables (maximum 5 supported)');
+                }
+                
+                // Generate all possible combinations of truth values
+                const rows = generateCombinations(variables.length);
+                
+                // Evaluate expression for each combination
+                const results = rows.map(row => {
+                    const assignment = {};
+                    variables.forEach((variable, index) => {
+                        assignment[variable] = row[index];
+                    });
+                    
+                    try {
+                        return evaluateExpression(expression, assignment);
+                    } catch (error) {
+                        throw new Error(`Evaluation error: ${error.message}`);
+                    }
+                });
+                
+                // Find unique subexpressions for complex expressions
+                const subexpressions = identifySubexpressions(expression);
+                
+                // Create the truth table HTML
+                resultDiv.innerHTML = `
+                    <h3>Truth Table for: ${formatExpression(expression)}</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                ${variables.map(v => `<th>${v}</th>`).join('')}
+                                ${subexpressions.length > 0 ? subexpressions.map(subexpr => 
+                                    `<th>${formatExpression(subexpr)}</th>`).join('') : ''}
+                                <th>${formatExpression(expression)}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rows.map((row, rowIndex) => `
+                                <tr>
+                                    ${row.map(value => `<td>${value ? 'T' : 'F'}</td>`).join('')}
+                                    ${subexpressions.length > 0 ? subexpressions.map(subexpr => {
+                                        const assignment = {};
+                                        variables.forEach((variable, index) => {
+                                            assignment[variable] = row[index];
+                                        });
+                                        const result = evaluateExpression(subexpr, assignment);
+                                        return `<td>${result ? 'T' : 'F'}</td>`;
+                                    }).join('') : ''}
+                                    <td>${results[rowIndex] ? 'T' : 'F'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            }
+            
+            function generateCombinations(numVariables) {
+                const combinations = [];
+                const totalRows = Math.pow(2, numVariables);
+                
+                for (let i = 0; i < totalRows; i++) {
+                    const combination = [];
+                    for (let j = numVariables - 1; j >= 0; j--) {
+                        combination.push(Boolean((i >> j) & 1));
+                    }
+                    combinations.push(combination);
+                }
+                
+                return combinations;
+            }
+            
+            function evaluateExpression(expression, assignment) {
+                // Simple tokenizer and parser for logical expressions
+                
+                // Remove all spaces
+                expression = expression.replace(/\s+/g, '');
+                
+                // Replace common operator alternates
+                expression = expression
+                    .replace(/~/g, '!')
+                    .replace(/&&/g, '&')
+                    .replace(/\|\|/g, '|');
+                
+                function parseExpression(expr, index = 0) {
+                    let result, nextIndex;
+                    [result, nextIndex] = parseImplication(expr, index);
+                    
+                    while (nextIndex < expr.length) {
+                        if (expr.substring(nextIndex, nextIndex + 3) === '<->') {
+                            let right;
+                            [right, nextIndex] = parseImplication(expr, nextIndex + 3);
+                            result = result === right;
+                        } else {
+                            break;
+                        }
+                    }
+                    
+                    return [result, nextIndex];
+                }
+                
+                function parseImplication(expr, index) {
+                    let result, nextIndex;
+                    [result, nextIndex] = parseOr(expr, index);
+                    
+                    while (nextIndex < expr.length) {
+                        if (expr.substring(nextIndex, nextIndex + 2) === '->') {
+                            let right;
+                            [right, nextIndex] = parseOr(expr, nextIndex + 2);
+                            result = !result || right; // p -> q is equivalent to !p | q
+                        } else {
+                            break;
+                        }
+                    }
+                    
+                    return [result, nextIndex];
+                }
+                
+                function parseOr(expr, index) {
+                    let result, nextIndex;
+                    [result, nextIndex] = parseXor(expr, index);
+                    
+                    while (nextIndex < expr.length) {
+                        if (expr[nextIndex] === '|') {
+                            let right;
+                            [right, nextIndex] = parseXor(expr, nextIndex + 1);
+                            result = result || right;
+                        } else {
+                            break;
+                        }
+                    }
+                    
+                    return [result, nextIndex];
+                }
+                
+                function parseXor(expr, index) {
+                    let result, nextIndex;
+                    [result, nextIndex] = parseAnd(expr, index);
+                    
+                    while (nextIndex < expr.length) {
+                        if (expr[nextIndex] === '^') {
+                            let right;
+                            [right, nextIndex] = parseAnd(expr, nextIndex + 1);
+                            result = (result || right) && !(result && right); // XOR
+                        } else {
+                            break;
+                        }
+                    }
+                    
+                    return [result, nextIndex];
+                }
+                
+                function parseAnd(expr, index) {
+                    let result, nextIndex;
+                    [result, nextIndex] = parseNot(expr, index);
+                    
+                    while (nextIndex < expr.length) {
+                        if (expr[nextIndex] === '&') {
+                            let right;
+                            [right, nextIndex] = parseNot(expr, nextIndex + 1);
+                            result = result && right;
+                        } else {
+                            break;
+                        }
+                    }
+                    
+                    return [result, nextIndex];
+                }
+                
+                function parseNot(expr, index) {
+                    if (expr[index] === '!' || expr[index] === '~') {
+                        const [result, nextIndex] = parseNot(expr, index + 1);
+                        return [!result, nextIndex];
+                    } else {
+                        return parsePrimary(expr, index);
+                    }
+                }
+                
+                function parsePrimary(expr, index) {
+                    if (expr[index] === '(') {
+                        const [result, nextIndex] = parseExpression(expr, index + 1);
+                        
+                        if (nextIndex >= expr.length || expr[nextIndex] !== ')') {
+                            throw new Error('Missing closing parenthesis');
+                        }
+                        
+                        return [result, nextIndex + 1];
+                    } else if (/[a-z]/i.test(expr[index])) {
+                        const variable = expr[index];
+                        
+                        if (assignment[variable] === undefined) {
+                            throw new Error(`Variable '${variable}' is not defined`);
+                        }
+                        
+                        return [assignment[variable], index + 1];
+                    } else {
+                        throw new Error(`Unexpected character at position ${index + 1}: '${expr[index]}'`);
+                    }
+                }
+                
+                const [result, nextIndex] = parseExpression(expression);
+                
+                if (nextIndex < expression.length) {
+                    throw new Error(`Unexpected character at position ${nextIndex + 1}: '${expression[nextIndex]}'`);
+                }
+                
+                return result;
+            }
+            
+            function identifySubexpressions(expression) {
+                // For complex expressions, identify meaningful subexpressions to show in the truth table
+                // This is a simplified approach that looks for expressions within parentheses
+                const subexpressions = [];
+                
+                // Simple regex to find expressions in parentheses
+                const parenRegex = /\(([^()]+)\)/g;
+                let match;
+                
+                while ((match = parenRegex.exec(expression)) !== null) {
+                    if (match[1].length > 1) { // Only add non-trivial subexpressions
+                        subexpressions.push(match[1]);
+                    }
+                }
+                
+                // Remove duplicates
+                return [...new Set(subexpressions)];
+            }
+            
+            function formatExpression(expr) {
+                // Format expression for display with proper symbols
+                return expr
+                    .replace(/&/g, '∧')
+                    .replace(/\|/g, '∨')
+                    .replace(/!/g, '¬')
+                    .replace(/->/g, '→')
+                    .replace(/<->/g, '↔')
+                    .replace(/\^/g, '⊕');
+            }
+            
+            // Initialize with default example
+            updateVariableList();
+            generateTruthTable(expressionInput.value);
+        });
+    </script>
+</body>
+</html>
